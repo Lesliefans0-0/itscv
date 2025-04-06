@@ -1,9 +1,9 @@
 experiment_name: vit_iterative_2025-04-06-0134
 imagenet_dir: "/mnt/d1/eirwynliang/imagenet-1k-processed-deepseek"
-batch_size: 128
+batch_size: 64
 num_workers: 8
 num_classes: 1000
-gpus: 3
+gpus: 2
 max_epochs: 50
 learning_rate: 3e-4
 precision: 16

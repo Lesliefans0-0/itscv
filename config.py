@@ -12,7 +12,7 @@ class BaseConfig:
     num_classes: int = 1000
 
     # Training settings
-    gpus: int = 3
+    gpus: int = 8
     max_epochs: int = 50
     learning_rate: float = 3e-4
 

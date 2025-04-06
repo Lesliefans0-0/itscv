@@ -1,4 +1,4 @@
-# vit_lightning.py
+# main.py
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
@@ -13,37 +13,7 @@ from models.iterative_vit import IterativeViT
 from data.imagenet_datamodule import ImageNetDataModule, CustomImageNetDataModule
 from config import get_experiment_config
 from callbacks import TokenSimilarityCallback
-
-# --- LightningModule ---
-class ViTClassifier(pl.LightningModule):
-    def __init__(self, model, lr=3e-4):
-        super().__init__()
-        self.model = model
-        self.lr = lr
-        self.criterion = nn.CrossEntropyLoss()
-
-    def forward(self, x):
-        return self.model(x)
-
-    def training_step(self, batch, batch_idx):
-        x, y = batch
-        logits = self(x)
-        loss = self.criterion(logits, y)
-        acc = (logits.argmax(dim=1) == y).float().mean()
-        self.log("train_loss", loss, on_step=True, prog_bar=True)
-        self.log("train_acc", acc, on_step=True, prog_bar=True)
-        return loss
-
-    def validation_step(self, batch, batch_idx):
-        x, y = batch
-        logits = self(x)
-        loss = self.criterion(logits, y)
-        acc = (logits.argmax(dim=1) == y).float().mean()
-        self.log("val_loss", loss, prog_bar=True)
-        self.log("val_acc", acc, prog_bar=True)
-
-    def configure_optimizers(self):
-        return torch.optim.AdamW(self.parameters(), lr=self.lr)
+from models.vit_lightning import ViTClassifier
 
 # --- Training Entry Point ---
 if __name__ == "__main__":
@@ -120,5 +90,5 @@ if __name__ == "__main__":
     # Start testing
     trainer.test(model, data_module)
 
-# CUDA_VISIBLE_DEVICES=1,5,6 python main.py --experiment vit_iterative_2025-04-06-0134; 
-# CUDA_VISIBLE_DEVICES=1,5,6 python main.py --experiment vit_base_2025-04-06-0134
+# CUDA_VISIBLE_DEVICES=5,6 python main.py --experiment vit_iterative_2025-04-06-0134; 
+# CUDA_VISIBLE_DEVICES=5,6 python main.py --experiment vit_base_2025-04-06-0134
