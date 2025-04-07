@@ -64,10 +64,12 @@ if __name__ == "__main__":
     # Setup callbacks
     checkpoint_callback = ModelCheckpoint(
         dirpath=checkpoint_dir,
-        filename=f"{cfg.experiment_name}-{{epoch:02d}}-{{val_loss:.2f}}",
-        save_top_k=3,
-        monitor="val_loss",
-        mode="min"
+        filename=f"{cfg.experiment_name}-{{epoch:02d}}-{{val_acc:.2f}}",
+        save_top_k=1,
+        save_last=True,
+        every_n_epochs=5,
+        monitor="val_acc",
+        mode="max"
     )
     
     token_similarity_callback = TokenSimilarityCallback(log_every_n_steps=100)
