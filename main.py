@@ -50,13 +50,15 @@ if __name__ == "__main__":
             layer_idx=cfg.layer_idx,
             emb_size=cfg.emb_size
         )
+        lr = float(cfg.learning_rate) / cfg.num_iterations # because we have passed through the model multiple times, we need to divide the learning rate by the number of iterations
     else:
         torch_model = VisionTransformer(
             emb_size=cfg.emb_size
         )
+        lr = float(cfg.learning_rate)
 
     # wrap the model with LightningModule
-    model = ViTClassifier(model=torch_model, lr=float(cfg.learning_rate))
+    model = ViTClassifier(model=torch_model, lr=lr)
     
     # Setup logger
     logger = TensorBoardLogger(tensorboard_dir, name=cfg.experiment_name)
@@ -64,12 +66,12 @@ if __name__ == "__main__":
     # Setup callbacks
     checkpoint_callback = ModelCheckpoint(
         dirpath=checkpoint_dir,
-        filename=f"{cfg.experiment_name}-{{epoch:02d}}-{{val_acc:.2f}}",
+        filename=f"{cfg.experiment_name}-{{epoch:02d}}-{{val_loss:.2f}}",
         save_top_k=1,
         save_last=True,
         every_n_epochs=5,
-        monitor="val_acc",
-        mode="max"
+        monitor="val_loss",
+        mode="min"
     )
     
     token_similarity_callback = TokenSimilarityCallback(log_every_n_steps=100)

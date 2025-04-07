@@ -55,8 +55,13 @@ class ImageNetDataModule(pl.LightningDataModule):
             shuffle=False,
             num_workers=self.num_workers,
             pin_memory=True
-        ) 
-    
+        )
+
+    def test_dataloader(self):
+        # Note: ImageNet doesn't release its test set publicly
+        # Following standard practice, we use the validation set for testing
+        return self.val_dataloader()
+
 def pil_loader(path):
     with open(path, 'rb') as f:
         img: PImage.Image = PImage.open(f).convert('RGB')
