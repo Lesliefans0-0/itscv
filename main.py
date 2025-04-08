@@ -50,15 +50,13 @@ if __name__ == "__main__":
             layer_idx=cfg.layer_idx,
             emb_size=cfg.emb_size
         )
-        lr = float(cfg.learning_rate) / cfg.num_iterations # because we have passed through the model multiple times, we need to divide the learning rate by the number of iterations
     else:
         torch_model = VisionTransformer(
             emb_size=cfg.emb_size
         )
-        lr = float(cfg.learning_rate)
 
     # wrap the model with LightningModule
-    model = ViTClassifier(model=torch_model, lr=lr)
+    model = ViTClassifier(model=torch_model, lr=float(cfg.learning_rate) * cfg.gpus)
     
     # Setup logger
     logger = TensorBoardLogger(tensorboard_dir, name=cfg.experiment_name)
@@ -95,4 +93,4 @@ if __name__ == "__main__":
     trainer.test(model, data_module)
 
 # CUDA_VISIBLE_DEVICES=5,6 python main.py --experiment vit_iterative_2025-04-06-0134; 
-# CUDA_VISIBLE_DEVICES=5,6 python main.py --experiment vit_base_2025-04-06-0134
+# CUDA_VISIBLE_DEVICES=0,7 python main.py --experiment vit_base_2025-04-06-0134
