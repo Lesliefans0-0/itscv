@@ -56,7 +56,7 @@ if __name__ == "__main__":
         )
 
     # wrap the model with LightningModule
-    model = ViTClassifier(model=torch_model, lr=float(cfg.learning_rate) * cfg.gpus)
+    model = ViTClassifier(model=torch_model, lr=float(cfg.learning_rate)) # * cfg.gpus
     
     # Setup logger
     logger = TensorBoardLogger(tensorboard_dir, name=cfg.experiment_name)
