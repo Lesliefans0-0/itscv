@@ -13,7 +13,7 @@ from models.iterative_vit import IterativeViT
 from data.imagenet_datamodule import ImageNetDataModule, CustomImageNetDataModule
 from config import get_experiment_config
 from callbacks import TokenSimilarityCallback
-from models.vit_lightning import ViTClassifier
+from models.vit_lightning import ViTClassifier, IterativeViTClassifier
 
 # --- Training Entry Point ---
 if __name__ == "__main__":
@@ -50,14 +50,13 @@ if __name__ == "__main__":
             layer_idx=cfg.layer_idx,
             emb_size=cfg.emb_size
         )
+        model = IterativeViTClassifier(model=torch_model, lr=float(cfg.learning_rate) * cfg.gpus)
     else:
         torch_model = VisionTransformer(
             emb_size=cfg.emb_size
         )
+        model = ViTClassifier(model=torch_model, lr=float(cfg.learning_rate) * cfg.gpus)
 
-    # wrap the model with LightningModule
-    model = ViTClassifier(model=torch_model, lr=float(cfg.learning_rate)) # * cfg.gpus
-    
     # Setup logger
     logger = TensorBoardLogger(tensorboard_dir, name=cfg.experiment_name)
 
@@ -67,9 +66,10 @@ if __name__ == "__main__":
         filename=f"{cfg.experiment_name}-{{epoch:02d}}-{{val_loss:.2f}}",
         save_top_k=1,
         save_last=True,
-        every_n_epochs=5,
+        every_n_epochs=1,
         monitor="val_loss",
-        mode="min"
+        mode="min",
+        save_on_train_epoch_end=True
     )
     
     token_similarity_callback = TokenSimilarityCallback(log_every_n_steps=100)
