@@ -14,7 +14,7 @@ from models.recursive_vit import RecursiveViT
 from data.imagenet_datamodule import ImageNetDataModule, CustomImageNetDataModule
 from config import get_experiment_config
 from callbacks import TokenSimilarityCallback
-from models.vit_lightning import ViTClassifier, IterativeViTClassifier, RecursiveViTClassifier
+from lightning_models import ViTClassifier, IterativeViTClassifier, RecursiveViTClassifier
 
 # --- Training Entry Point ---
 if __name__ == "__main__":

@@ -1,46 +1,8 @@
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
-from models.vit import VisionTransformer
 from models.iterative_vit import IterativeViT
-from models.recursive_vit import RecursiveViT
-
-# --- LightningModule ---
-class ViTClassifier(pl.LightningModule):
-    def __init__(self, model: VisionTransformer, lr=3e-4):
-        super().__init__()
-        self.model = model
-        self.lr = lr
-        self.criterion = nn.CrossEntropyLoss()
-
-    def forward(self, x):
-        return self.model(x)
-
-    def _calculate_metrics(self, batch):
-        x, y = batch
-        logits = self(x)
-        loss = self.criterion(logits, y)
-        acc = (logits.argmax(dim=1) == y).float().mean()
-        return loss, acc
-
-    def training_step(self, batch, batch_idx):
-        loss, acc = self._calculate_metrics(batch)
-        self.log("train_loss", loss, on_step=True, prog_bar=True, sync_dist=True)
-        self.log("train_acc", acc, on_step=True, prog_bar=True, sync_dist=True)
-        return loss
-
-    def validation_step(self, batch, batch_idx):
-        loss, acc = self._calculate_metrics(batch)
-        self.log("val_loss", loss, prog_bar=True, sync_dist=True)
-        self.log("val_acc", acc, prog_bar=True, sync_dist=True)
-
-    def test_step(self, batch, batch_idx):
-        loss, acc = self._calculate_metrics(batch)
-        self.log("test_loss", loss, prog_bar=True, sync_dist=True)
-        self.log("test_acc", acc, prog_bar=True, sync_dist=True)
-
-    def configure_optimizers(self):
-        return torch.optim.AdamW(self.parameters(), lr=self.lr)
+from .vit_classifier import ViTClassifier
 
 class IterativeViTClassifier(ViTClassifier):
     def __init__(self, model: IterativeViT, lr=3e-4):
@@ -74,8 +36,8 @@ class IterativeViTClassifier(ViTClassifier):
     def _log_step_metrics(self, batch, batch_idx, stage: str):
         """Calculates and logs metrics for a given stage (val/test)."""
         total_loss, final_acc, losses, accs = self._calculate_metrics_for_iterations(batch)
-        self.log(f"{stage}_loss", total_loss, prog_bar=True)
-        self.log(f"{stage}_acc", final_acc, prog_bar=True) # Log final accuracy
+        self.log(f"{stage}_loss", total_loss, prog_bar=True, sync_dist=True)
+        self.log(f"{stage}_acc", final_acc, prog_bar=True, sync_dist=True) # Log final accuracy
 
         # Log accuracy for each iteration under a common tag, grouped by iteration
         for i, acc in enumerate(accs):
@@ -89,7 +51,3 @@ class IterativeViTClassifier(ViTClassifier):
 
     def test_step(self, batch, batch_idx):
         self._log_step_metrics(batch, batch_idx, 'test')
-
-class RecursiveViTClassifier(IterativeViTClassifier):
-    def __init__(self, model: RecursiveViT, lr=3e-4):
-        super().__init__(model, lr)

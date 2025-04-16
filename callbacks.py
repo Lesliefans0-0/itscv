@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 from pytorch_lightning.callbacks import Callback
 from pytorch_lightning.loggers import TensorBoardLogger
-from models.vit_lightning import ViTClassifier
+from lightning_models import ViTClassifier
 from typing import List
 import pytorch_lightning as pl
 from torch.utils.tensorboard import SummaryWriter
