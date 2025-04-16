@@ -22,7 +22,7 @@ class BaseConfig:
     emb_size: int = 768
 
     # Experiment settings
-    use_iterative_vit: bool = False
+    model_type: str = 'vit'
     num_iterative_tokens: int = 3
     num_iterations: int = 5
     layer_idx: int = -2

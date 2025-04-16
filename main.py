@@ -10,10 +10,11 @@ import argparse
 
 from models.vit import VisionTransformer
 from models.iterative_vit import IterativeViT
+from models.recursive_vit import RecursiveViT
 from data.imagenet_datamodule import ImageNetDataModule, CustomImageNetDataModule
 from config import get_experiment_config
 from callbacks import TokenSimilarityCallback
-from models.vit_lightning import ViTClassifier, IterativeViTClassifier
+from models.vit_lightning import ViTClassifier, IterativeViTClassifier, RecursiveViTClassifier
 
 # --- Training Entry Point ---
 if __name__ == "__main__":
@@ -43,7 +44,7 @@ if __name__ == "__main__":
     )
 
     # Initialize model
-    if cfg.use_iterative_vit:
+    if cfg.model_type == 'iterative_vit':
         torch_model = IterativeViT(
             num_iterative_tokens=cfg.num_iterative_tokens,
             num_iterations=cfg.num_iterations,
@@ -51,11 +52,20 @@ if __name__ == "__main__":
             emb_size=cfg.emb_size
         )
         model = IterativeViTClassifier(model=torch_model, lr=float(cfg.learning_rate) * cfg.gpus)
-    else:
+    elif cfg.model_type == 'vit':
         torch_model = VisionTransformer(
             emb_size=cfg.emb_size
         )
         model = ViTClassifier(model=torch_model, lr=float(cfg.learning_rate) * cfg.gpus)
+    elif cfg.model_type == 'recursive_vit':
+        torch_model = RecursiveViT(
+            num_iterations=cfg.num_iterations,
+            layer_idx=cfg.layer_idx,
+            emb_size=cfg.emb_size
+        )
+        model = RecursiveViTClassifier(model=torch_model, lr=float(cfg.learning_rate) * cfg.gpus)
+    else:
+        raise ValueError(f"Invalid model type: {cfg.model_type}")
 
     # Setup logger
     logger = TensorBoardLogger(tensorboard_dir, name=cfg.experiment_name)
@@ -94,3 +104,4 @@ if __name__ == "__main__":
 
 # CUDA_VISIBLE_DEVICES=5,6 python main.py --experiment vit_iterative_2025-04-06-0134; 
 # CUDA_VISIBLE_DEVICES=0,7 python main.py --experiment vit_base_2025-04-06-0134
+# CUDA_VISIBLE_DEVICES=2 python main.py --experiment vit_recursive_dev
