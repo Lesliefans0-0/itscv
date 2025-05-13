@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
     # Setup callbacks
     checkpoint_callback = ModelCheckpoint(
-        dirpath=checkpoint_dir,
+        dirpath=os.path.join(checkpoint_dir, f"version_{logger.version}"),
         filename=f"{cfg.experiment_name}-{{epoch:02d}}-{{val_loss:.2f}}",
         save_top_k=1,
         save_last=True,
@@ -102,6 +102,6 @@ if __name__ == "__main__":
     # Start testing
     trainer.test(model, data_module)
 
-# CUDA_VISIBLE_DEVICES=5,6 python main.py --experiment vit_iterative_2025-04-06-0134; 
-# CUDA_VISIBLE_DEVICES=0,7 python main.py --experiment vit_base_2025-04-06-0134
+# CUDA_VISIBLE_DEVICES=0,1 python main.py --experiment vit_iterative_2025-05-12-2352; 
+# CUDA_VISIBLE_DEVICES=2,3 python main.py --experiment vit_iterative_2025-05-12-2356
 # CUDA_VISIBLE_DEVICES=2 python main.py --experiment vit_recursive_dev

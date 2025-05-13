@@ -31,9 +31,10 @@ class IterativeViT(VisionTransformer):
             requires_grad=False
         )
         
-        # Create learnable step embeddings for each iteration
-        self.step_embeddings = nn.Parameter(
-            torch.randn(1, num_iterations, self.emb_size)
+        # Create iteration step token
+        self.step_token = nn.Parameter(
+            torch.zeros(1, 1, self.emb_size),
+            requires_grad=False
         )
         
         # Modify the patch embedding to accommodate iterative tokens
@@ -49,16 +50,15 @@ class IterativeViT(VisionTransformer):
         # Initialize iterative tokens
         B = x.size(0)
         iterative_tokens = self.iterative_tokens.expand(B, -1, -1)
+        step_token = self.step_token.expand(B, -1, -1)
         
         # Store outputs for each iteration
         all_outputs = []
         
         for i in range(self.num_iterations):
-            # Get the step embedding for the current iteration
-            step_emb = self.step_embeddings[:, i:i+1].expand(B, -1, -1)
-            
+
             # Get patch embeddings and concatenate tokens
-            x_embed = self.patch_embed(x, iterative_tokens, step_emb)
+            x_embed = self.patch_embed(x, iterative_tokens, step_token)
             
             # Process through transformer blocks up to specified layer
             x_out = x_embed
@@ -85,19 +85,20 @@ class IterativeViT(VisionTransformer):
 class IterativePatchEmbedding(PatchEmbedding):
     def __init__(self, in_channels=3, patch_size=16, emb_size=768, img_size=224, num_iterative_tokens=3):
         super().__init__(in_channels, patch_size, emb_size, img_size)
-        # Only create position embeddings for iterative tokens
+        # Only create position embeddings for iterative tokens and step token
         self.iterative_pos_embed = nn.Parameter(
-            torch.randn(1, num_iterative_tokens, emb_size)
+            torch.randn(1, num_iterative_tokens + 1, emb_size)
         )
     
     def forward(self, x, iterative_tokens, step_token):
         # Get patch embeddings (includes position embeddings for patches and CLS token)
         x = super().forward(x)
         
-        # Add position embeddings to iterative tokens
-        iterative_tokens = iterative_tokens + self.iterative_pos_embed
+        # Add position embeddings to iterative tokens and step token
+        iterative_tokens = iterative_tokens + self.iterative_pos_embed[:, :-1]
+        step_token = step_token + self.iterative_pos_embed[:, -1:]
         
-        # Concatenate everything: CLS, Patches, Iterative Tokens, Step Token
+        # Concatenate everything
         x = torch.cat([x, iterative_tokens, step_token], dim=1)
         
         return x 
