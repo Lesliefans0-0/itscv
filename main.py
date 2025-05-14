@@ -51,19 +51,19 @@ if __name__ == "__main__":
             layer_idx=cfg.layer_idx,
             emb_size=cfg.emb_size
         )
-        model = IterativeViTClassifier(model=torch_model, lr=float(cfg.learning_rate) * cfg.gpus)
+        model = IterativeViTClassifier(model=torch_model, config=cfg)
     elif cfg.model_type == 'vit':
         torch_model = VisionTransformer(
             emb_size=cfg.emb_size
         )
-        model = ViTClassifier(model=torch_model, lr=float(cfg.learning_rate) * cfg.gpus)
+        model = ViTClassifier(model=torch_model, config=cfg)
     elif cfg.model_type == 'recursive_vit':
         torch_model = RecursiveViT(
             num_iterations=cfg.num_iterations,
             layer_idx=cfg.layer_idx,
             emb_size=cfg.emb_size
         )
-        model = RecursiveViTClassifier(model=torch_model, lr=float(cfg.learning_rate) * cfg.gpus)
+        model = RecursiveViTClassifier(model=torch_model, config=cfg)
     else:
         raise ValueError(f"Invalid model type: {cfg.model_type}")
 
@@ -102,6 +102,6 @@ if __name__ == "__main__":
     # Start testing
     trainer.test(model, data_module)
 
-# CUDA_VISIBLE_DEVICES=0,1 python main.py --experiment vit_iterative_2025-05-12-2352; 
-# CUDA_VISIBLE_DEVICES=2,3 python main.py --experiment vit_iterative_2025-05-12-2356
+# CUDA_VISIBLE_DEVICES=4,5 python main.py --experiment vit_iterative_2025-05-12-2352; 
+# CUDA_VISIBLE_DEVICES=6,7 python main.py --experiment vit_iterative_2025-05-12-2356
 # CUDA_VISIBLE_DEVICES=2 python main.py --experiment vit_recursive_dev

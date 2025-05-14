@@ -3,11 +3,13 @@ import torch.nn as nn
 import pytorch_lightning as pl
 from models.iterative_vit import IterativeViT
 from .vit_classifier import ViTClassifier
+from config import BaseConfig
 
 class IterativeViTClassifier(ViTClassifier):
-    def __init__(self, model: IterativeViT, lr=3e-4):
-        super().__init__(model, lr)
+    def __init__(self, model: IterativeViT, config: BaseConfig):
+        super().__init__(model, config)
         self.num_iterations = model.num_iterations
+        self.loss_assignment = config.loss_assignment
 
     def _calculate_metrics_for_iterations(self, batch):
         x, y = batch
@@ -19,12 +21,15 @@ class IterativeViTClassifier(ViTClassifier):
         for logits in outputs:
             loss = self.criterion(logits, y)
             # Average the loss across iterations for the main loss metric
-            total_loss += loss * (1 / self.num_iterations) 
+            if self.loss_assignment == 'all_iterations':
+                total_loss += loss * (1 / self.num_iterations)
             losses.append(loss)
             accs.append((logits.argmax(dim=1) == y).float().mean())
             
         # Calculate accuracy based on the final iteration's output
         final_acc = accs[-1]
+        if self.loss_assignment == 'last_iteration':
+            total_loss = losses[-1]
         
         return total_loss, final_acc, losses, accs
 

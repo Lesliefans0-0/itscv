@@ -14,6 +14,7 @@ class BaseConfig:
     # Training settings
     gpus: int = 8
     max_epochs: int = 50
+    warmup_steps: int = 5 * 1e4 # 10k per epoch
     learning_rate: float = 3e-4
 
     # Model settings
@@ -26,9 +27,13 @@ class BaseConfig:
     num_iterative_tokens: int = 3
     num_iterations: int = 5
     layer_idx: int = -2
+    loss_assignment: str = 'all_iterations' # 'last_iteration' or 'all_iterations'
 
     # Experiment name (will be used for logging and checkpoints)
     experiment_name: str = "default"
+
+    # Calculated config, do not set
+    
 
     @classmethod
     def from_yaml(cls, config_path: str) -> 'BaseConfig':

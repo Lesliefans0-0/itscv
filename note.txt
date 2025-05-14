@@ -2,3 +2,8 @@ x. training的时候step embedding只到5，推理的时候设置成10然后load
 x. 如果用attention mask+iterative，是不是非常省资源但是效果拔群？
 x. 和recursive、扩展epoch数对比
 x. 当前测试脚本，定义模型的时候会规定num_iterations，之前step_embedding的做法无法在num_iteration不对齐的情况下推理，无论是大是小。所以回退到之前的版本。
+
+vit_iterative_2025-05-12-2352和vit_iterative_2025-05-12-2356
+# version0基于step token的做法，看上去效果较差
+# version1基于step embedding，但是看上去也没改善，还是有训练稳定性的问题。猜测可能和token/embedding的选择无关，反而和loss传递的方式有关。之前是只传最后一次iteration的。
+# 这里claim loss的传递方式应该也可能不是本质问题，而是没有做warmup。于是准备试一下warmup。
