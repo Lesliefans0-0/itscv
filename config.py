@@ -21,6 +21,7 @@ class BaseConfig:
     precision: int = 16
     log_every_n_steps: int = 50
     emb_size: int = 768
+    depth: int = 12
 
     # Experiment settings
     model_type: str = 'vit'

@@ -49,19 +49,22 @@ if __name__ == "__main__":
             num_iterative_tokens=cfg.num_iterative_tokens,
             num_iterations=cfg.num_iterations,
             layer_idx=cfg.layer_idx,
-            emb_size=cfg.emb_size
+            emb_size=cfg.emb_size,
+            depth=cfg.depth
         )
         model = IterativeViTClassifier(model=torch_model, config=cfg)
     elif cfg.model_type == 'vit':
         torch_model = VisionTransformer(
-            emb_size=cfg.emb_size
+            emb_size=cfg.emb_size,
+            depth=cfg.depth
         )
         model = ViTClassifier(model=torch_model, config=cfg)
     elif cfg.model_type == 'recursive_vit':
         torch_model = RecursiveViT(
             num_iterations=cfg.num_iterations,
             layer_idx=cfg.layer_idx,
-            emb_size=cfg.emb_size
+            emb_size=cfg.emb_size,
+            depth=cfg.depth
         )
         model = RecursiveViTClassifier(model=torch_model, config=cfg)
     else:
@@ -104,4 +107,5 @@ if __name__ == "__main__":
 
 # CUDA_VISIBLE_DEVICES=4,5 python main.py --experiment vit_iterative_2025-05-12-2352; 
 # CUDA_VISIBLE_DEVICES=6,7 python main.py --experiment vit_iterative_2025-05-12-2356
+# CUDA_VISIBLE_DEVICES=0,1 python main.py --experiment vit_base_2025-04-06-0134; 
 # CUDA_VISIBLE_DEVICES=2 python main.py --experiment vit_recursive_dev
