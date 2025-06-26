@@ -1,5 +1,5 @@
 experiment_name: vit_iterative_2025-05-12-2356
-imagenet_dir: "/mnt/d1/eirwynliang/imagenet-1k-processed-deepseek"
+imagenet_dir: "${IMAGENET_DIR:-./data/imagenet-1k}"
 batch_size: 62
 num_workers: 8
 num_classes: 1000

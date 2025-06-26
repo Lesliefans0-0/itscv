@@ -1,0 +1,27 @@
+# Template configuration file for ITSCV experiments
+# Copy this file and modify the parameters as needed
+
+experiment_name: "my_experiment"
+imagenet_dir: "${IMAGENET_DIR:-./data/imagenet-1k}"  # Use environment variable or default path
+batch_size: 128
+num_workers: 8
+num_classes: 1000
+
+# Training settings
+gpus: 1  # Adjust based on your hardware
+max_epochs: 50
+learning_rate: 3e-4
+precision: 16
+log_every_n_steps: 50
+
+# Model settings
+model_type: "vit"  # Options: "vit", "iterative_vit", "recursive_vit"
+emb_size: 768
+depth: 12
+
+# Iterative/Recursive specific settings (only used for respective model types)
+num_iterative_tokens: 3
+num_iterations: 5
+layer_idx: -2
+loss_assignment: "all_iterations"  # Options: "last_iteration", "all_iterations"
+warmup_steps: 50000.0 

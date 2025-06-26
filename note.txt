@@ -1,34 +1,35 @@
-x. training的时候step embedding只到5，推理的时候设置成10然后load ckpt，理论上会存在embedding形状对不齐的问题
-x. 如果用attention mask+iterative，是不是非常省资源但是效果拔群？
-x. 和recursive、扩展epoch数对比
-x. 当前测试脚本，定义模型的时候会规定num_iterations，之前step_embedding的做法无法在num_iteration不对齐的情况下推理，无论是大是小。所以回退到之前的版本。
+# Research Notes - Inference-Time-Scaling Computer Vision
 
-vit_iterative_2025-05-12-2352和vit_iterative_2025-05-12-2356
-# version0基于step token的做法，看上去效果较差
-# version1基于step embedding，但是看上去也没改善，还是有训练稳定性的问题。猜测可能和token/embedding的选择无关，反而和loss传递的方式有关。之前是只传最后一次iteration的。
-# 这里claim loss的传递方式应该也可能不是本质问题，而是没有做warmup。于是准备试一下warmup。
+## Technical Challenges and Observations
 
+1. **Training vs Inference Token Mismatch**: When training with step embedding limited to 5 iterations but inference set to 10, there's a potential embedding shape misalignment issue.
 
-去程
-服务器2
-rsync -avzhP --ignore-existing \
-    /home/lesliefans/itscv/experiments/ \
-    OZ-a100-40g-2:/home/lesliefans/itscv/experiments/
+2. **Attention Mask + Iterative Approach**: Investigating whether combining attention masks with iterative processing could be more resource-efficient while maintaining performance.
 
-服务器4
-rsync -avzhP --ignore-existing \
-    /home/lesliefans/itscv/experiments/ \
-    OZ-a100-40g-4:/home/lesliefans/itscv/experiments/
+3. **Model Comparison**: Need to compare recursive approaches with extended epoch training to understand trade-offs.
 
-回程
-服务器2
-rsync -avzhP --ignore-existing \
-    OZ-a100-40g-2:/home/lesliefans/itscv/experiments/ \
-    /home/lesliefans/itscv/experiments/
+4. **Inference Flexibility**: Current test scripts define model with fixed num_iterations, making it difficult to use step_embedding approach when training and inference iteration counts don't match.
 
-服务器4
-rsync -avzhP --ignore-existing \
-    OZ-a100-40g-4:/home/lesliefans/itscv/experiments/ \
-    /home/lesliefans/itscv/experiments/
+## Experiment Results
 
-sudo apt install unison
+### vit_iterative_2025-05-12-2352 and vit_iterative_2025-05-12-2356
+- **Version 0**: Based on step token approach - showed poor performance
+- **Version 1**: Based on step embedding - no improvement, still has training stability issues
+- **Hypothesis**: Issues may not be related to token/embedding selection, but rather loss propagation method
+- **Previous approach**: Only propagated loss from final iteration
+- **Current approach**: Investigating whether loss propagation method is the core issue or if warmup is needed
+
+## Key Research Questions
+
+1. Is the fundamental issue related to loss propagation method rather than token/embedding selection?
+2. Would proper warmup scheduling improve training stability?
+3. Can attention masking provide better resource efficiency for iterative approaches?
+4. How do recursive approaches compare to extended training epochs?
+
+## Next Steps
+
+- Implement proper warmup scheduling
+- Test attention mask integration
+- Compare recursive vs iterative approaches
+- Investigate loss propagation strategies
+

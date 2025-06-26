@@ -6,7 +6,7 @@ from typing import Optional
 @dataclass
 class BaseConfig:
     # Data settings
-    imagenet_dir: str = "/mnt/d1/eirwynliang/imagenet-1k-processed-deepseek"
+    imagenet_dir: str = os.getenv('IMAGENET_DIR', './data/imagenet-1k')
     batch_size: int = 128
     num_workers: int = 8
     num_classes: int = 1000

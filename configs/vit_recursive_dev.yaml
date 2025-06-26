@@ -1,9 +1,9 @@
 experiment_name: vit_recursive_dev
-imagenet_dir: "/mnt/d1/eirwynliang/imagenet-1k-processed-deepseek"
-batch_size: 62
+imagenet_dir: "${IMAGENET_DIR:-./data/imagenet-1k}"
+batch_size: 128
 num_workers: 8
 num_classes: 1000
-gpus: 1
+gpus: 8
 max_epochs: 50
 learning_rate: 3e-4
 precision: 16
