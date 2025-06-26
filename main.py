@@ -1,4 +1,4 @@
-# vit_lightning.py
+# main.py
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
@@ -10,40 +10,11 @@ import argparse
 
 from models.vit import VisionTransformer
 from models.iterative_vit import IterativeViT
+from models.recursive_vit import RecursiveViT
 from data.imagenet_datamodule import ImageNetDataModule, CustomImageNetDataModule
 from config import get_experiment_config
 from callbacks import TokenSimilarityCallback
-
-# --- LightningModule ---
-class ViTClassifier(pl.LightningModule):
-    def __init__(self, model, lr=3e-4):
-        super().__init__()
-        self.model = model
-        self.lr = lr
-        self.criterion = nn.CrossEntropyLoss()
-
-    def forward(self, x):
-        return self.model(x)
-
-    def training_step(self, batch, batch_idx):
-        x, y = batch
-        logits = self(x)
-        loss = self.criterion(logits, y)
-        acc = (logits.argmax(dim=1) == y).float().mean()
-        self.log("train_loss", loss, on_step=True, prog_bar=True)
-        self.log("train_acc", acc, on_step=True, prog_bar=True)
-        return loss
-
-    def validation_step(self, batch, batch_idx):
-        x, y = batch
-        logits = self(x)
-        loss = self.criterion(logits, y)
-        acc = (logits.argmax(dim=1) == y).float().mean()
-        self.log("val_loss", loss, prog_bar=True)
-        self.log("val_acc", acc, prog_bar=True)
-
-    def configure_optimizers(self):
-        return torch.optim.AdamW(self.parameters(), lr=self.lr)
+from lightning_models import ViTClassifier, IterativeViTClassifier, RecursiveViTClassifier
 
 # --- Training Entry Point ---
 if __name__ == "__main__":
@@ -73,31 +44,45 @@ if __name__ == "__main__":
     )
 
     # Initialize model
-    if cfg.use_iterative_vit:
+    if cfg.model_type == 'iterative_vit':
         torch_model = IterativeViT(
             num_iterative_tokens=cfg.num_iterative_tokens,
             num_iterations=cfg.num_iterations,
             layer_idx=cfg.layer_idx,
-            emb_size=cfg.emb_size
+            emb_size=cfg.emb_size,
+            depth=cfg.depth
         )
-    else:
+        model = IterativeViTClassifier(model=torch_model, config=cfg)
+    elif cfg.model_type == 'vit':
         torch_model = VisionTransformer(
-            emb_size=cfg.emb_size
+            emb_size=cfg.emb_size,
+            depth=cfg.depth
         )
+        model = ViTClassifier(model=torch_model, config=cfg)
+    elif cfg.model_type == 'recursive_vit':
+        torch_model = RecursiveViT(
+            num_iterations=cfg.num_iterations,
+            layer_idx=cfg.layer_idx,
+            emb_size=cfg.emb_size,
+            depth=cfg.depth
+        )
+        model = RecursiveViTClassifier(model=torch_model, config=cfg)
+    else:
+        raise ValueError(f"Invalid model type: {cfg.model_type}")
 
-    # wrap the model with LightningModule
-    model = ViTClassifier(model=torch_model, lr=float(cfg.learning_rate))
-    
     # Setup logger
     logger = TensorBoardLogger(tensorboard_dir, name=cfg.experiment_name)
 
     # Setup callbacks
     checkpoint_callback = ModelCheckpoint(
-        dirpath=checkpoint_dir,
+        dirpath=os.path.join(checkpoint_dir, f"version_{logger.version}"),
         filename=f"{cfg.experiment_name}-{{epoch:02d}}-{{val_loss:.2f}}",
-        save_top_k=3,
+        save_top_k=1,
+        save_last=True,
+        every_n_epochs=1,
         monitor="val_loss",
-        mode="min"
+        mode="min",
+        save_on_train_epoch_end=True
     )
     
     token_similarity_callback = TokenSimilarityCallback(log_every_n_steps=100)
@@ -120,5 +105,7 @@ if __name__ == "__main__":
     # Start testing
     trainer.test(model, data_module)
 
-# CUDA_VISIBLE_DEVICES=1,5,6 python main.py --experiment vit_iterative_2025-04-06-0134; 
-# CUDA_VISIBLE_DEVICES=1,5,6 python main.py --experiment vit_base_2025-04-06-0134
+# CUDA_VISIBLE_DEVICES=4,5 python main.py --experiment vit_iterative_2025-05-12-2352; 
+# CUDA_VISIBLE_DEVICES=6,7 python main.py --experiment vit_iterative_2025-05-12-2356
+# CUDA_VISIBLE_DEVICES=0,1 python main.py --experiment vit_base_2025-04-06-0134; 
+# CUDA_VISIBLE_DEVICES=2 python main.py --experiment vit_recursive_dev

@@ -38,6 +38,19 @@ class ImageNetDataModule(pl.LightningDataModule):
                     self.normalize,
                 ])
             )
+        elif stage == 'test':
+            # Note: ImageNet doesn't release its test set publicly
+            # Following standard practice, we use the validation set for testing
+            self.test_dataset = datasets.ImageNet(
+                self.imagenet_dir, split='val',
+                transform=transforms.Compose([
+                    transforms.Resize(256),
+                    transforms.CenterCrop(224),
+                    transforms.ToTensor(),
+                    self.normalize,
+                ])
+            )
+        
 
     def train_dataloader(self):
         return DataLoader(
@@ -55,8 +68,17 @@ class ImageNetDataModule(pl.LightningDataModule):
             shuffle=False,
             num_workers=self.num_workers,
             pin_memory=True
-        ) 
-    
+        )
+
+    def test_dataloader(self):
+        return DataLoader(
+            self.test_dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=self.num_workers,
+            pin_memory=True
+        )
+
 def pil_loader(path):
     with open(path, 'rb') as f:
         img: PImage.Image = PImage.open(f).convert('RGB')
@@ -83,6 +105,18 @@ class CustomImageNetDataModule(ImageNetDataModule):
                 root=os.path.join(self.imagenet_dir, 'val'), 
                 loader=pil_loader, 
                 extensions=IMG_EXTENSIONS, 
+                transform=transforms.Compose([
+                    transforms.Resize(256),
+                    transforms.CenterCrop(224),
+                    transforms.ToTensor(),
+                    self.normalize,
+                ])
+            )
+        elif stage == 'test':
+            self.test_dataset = DatasetFolder(
+                root=os.path.join(self.imagenet_dir, 'val'),  # Using validation set for testing as per standard practice
+                loader=pil_loader,
+                extensions=IMG_EXTENSIONS,
                 transform=transforms.Compose([
                     transforms.Resize(256),
                     transforms.CenterCrop(224),

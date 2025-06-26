@@ -1,4 +1,4 @@
-experiment_name: vit_iterative_2025-04-06-0134
+experiment_name: vit_base_2025-04-06-0134
 imagenet_dir: "/mnt/d1/eirwynliang/imagenet-1k-processed-deepseek"
 batch_size: 62
 num_workers: 8
@@ -8,8 +8,8 @@ max_epochs: 50
 learning_rate: 3e-4
 precision: 16
 log_every_n_steps: 50
-model_type: iterative_vit
-num_iterative_tokens: 3
-num_iterations: 5
-layer_idx: -2
+model_type: vit
 emb_size: 768
+depth: 24
+# key difference: 
+# depth: 12 -> 24

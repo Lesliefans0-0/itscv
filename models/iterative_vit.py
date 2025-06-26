@@ -37,7 +37,7 @@ class IterativeViT(VisionTransformer):
             requires_grad=False
         )
         
-        # Modify the patch embedding to include new tokens
+        # Modify the patch embedding to accommodate iterative tokens
         self.patch_embed = IterativePatchEmbedding(
             in_channels=kwargs.get('in_channels', 3),
             patch_size=kwargs.get('patch_size', 16),
@@ -56,6 +56,7 @@ class IterativeViT(VisionTransformer):
         all_outputs = []
         
         for i in range(self.num_iterations):
+
             # Get patch embeddings and concatenate tokens
             x_embed = self.patch_embed(x, iterative_tokens, step_token)
             
@@ -65,17 +66,21 @@ class IterativeViT(VisionTransformer):
                 x_out = block(x_out)
                 if j == self.layer_idx and i < self.num_iterations - 1:
                     # Extract iterative tokens from this layer's output
+                    # Assumes step token is the last one
                     with torch.no_grad():  # Gradient cut
-                        iterative_tokens = x_out[:, -self.num_iterative_tokens-1:-1]
+                        iterative_tokens = x_out[:, -(self.num_iterative_tokens + 1):-1]
             
-            x_out = self.norm(x_out)
+            x_out_norm = self.norm(x_out)
+            
+            # Get CLS token and pass through head
+            cls_token = x_out_norm[:, 0]
+            output = self.head(cls_token)
             
             # Store the output
-            all_outputs.append(x_out)
+            all_outputs.append(output)
         
-        # For final classification, use the last iteration's [CLS] token
-        final_cls_token = all_outputs[-1][:, 0]
-        return self.head(final_cls_token)
+        # Return list of outputs from all iterations
+        return all_outputs
 
 class IterativePatchEmbedding(PatchEmbedding):
     def __init__(self, in_channels=3, patch_size=16, emb_size=768, img_size=224, num_iterative_tokens=3):
